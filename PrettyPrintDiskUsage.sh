@@ -1,11 +1,13 @@
 #!/usr/bin/bash
 echo "---Leda---"
-echo "--Folders--"
-for filename in /media/nas/*; do
-	if [ -d $filename ]
-		then du -sh $filename 2>/dev/null
-	fi
-done
+if [ "$1" = "full" ]; then
+	echo "--Folders--"
+	for filename in /media/nas/*; do
+  		if [ -d $filename ]
+  			then du -sh $filename 2>/dev/null
+		fi
+	done
+fi
 echo "--Main Library--"
 du -sh "/media/nas/afschuld/TV Shows" 2>/dev/null
 du -sh "/media/nas/afschuld/Movies" 2>/dev/null
