@@ -39,7 +39,8 @@ def get_tautulli_stats():
     #print(response['response']['data'])
     stats= "Most Popular Movie of last week: " + response['response']['data'][1]['rows'][0]['title'] + " (" + str(response['response']['data'][1]['rows'][0]['users_watched']) + " Users)"
     stats+= "\nMost Popular TV Show of last week: " + response['response']['data'][3]['rows'][0]['title'] + " (" + str(response['response']['data'][3]['rows'][0]['users_watched']) + " Users)"
-    stats+= "\nMost Popular Artist of last week: " + response['response']['data'][9]['rows'][0]['title'] + " (" + str(response['response']['data'][9]['rows'][0]['total_plays']) + " Plays)"
+    if(len(response['response']['data'][9]['rows']) > 0):
+      stats+= "\nMost Popular Artist of last week: " + response['response']['data'][9]['rows'][0]['title'] + " (" + str(response['response']['data'][9]['rows'][0]['total_plays']) + " Plays)"
 
     #print(stats)
     return stats
@@ -47,7 +48,8 @@ def get_tautulli_stats():
 # Call 
 def main():
     output = subprocess.check_output('./PrettyPrintDiskUsage.sh',stderr=subprocess.STDOUT,shell=True)
-    telegram_bot_sendtext('```\n' + output.decode('utf-8') + '```',CHAT_ID)
+    result = telegram_bot_sendtext('```\n' + output.decode('utf-8') + '```',CHAT_ID)
+    print(result)
     zpool_output = subprocess.check_output('zfs list',stderr=subprocess.STDOUT,shell=True).decode('utf-8')
     #print(zpool_output)
     free_space_search = re.search('castor\/media.*T  (([0-9]+)(\.[0-9])*)T',zpool_output)
