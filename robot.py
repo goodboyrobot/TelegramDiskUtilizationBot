@@ -45,26 +45,33 @@ def get_tautulli_stats():
     #print(stats)
     return stats
 
+def convertToTB(bytes):
+    return "{:.1f}".format(bytes / 1024 /1024 /1024 /1024) 
+
 # Call 
 def main():
     output = subprocess.check_output('./PrettyPrintDiskUsage.sh',stderr=subprocess.STDOUT,shell=True)
     result = telegram_bot_sendtext('```\n' + output.decode('utf-8') + '```',CHAT_ID)
-    print(result)
-    zpool_output = subprocess.check_output('zfs list',stderr=subprocess.STDOUT,shell=True).decode('utf-8')
+    #print(result)
+    zpool_output = subprocess.check_output('zfs list -p',stderr=subprocess.STDOUT,shell=True).decode('utf-8')
     #print(zpool_output)
-    free_space_search = re.search('castor\/media.*T  (([0-9]+)(\.[0-9])*)T',zpool_output)
-    free_space = float(free_space_search.group(1))
+    free_space_search = re.search('castor\/media\s+([0-9]+\.?[0-9]*)\s+([0-9]+\.?[0-9]*)',zpool_output)
+    free_space_bytes = float(free_space_search.group(2))
+    free_space = convertToTB(free_space_bytes)
     last_week_file = open('lastweek', 'r')
     lines = last_week_file.readlines()
     last_week_file.close()
-    last_week=float(lines[0].strip())
-    #print("Last week's space remaining " + str(last_week) + "TB")
-    burn_rate = (last_week - free_space)/7
+    last_week_bytes=float(lines[0].strip())
+    last_week = convertToTB(last_week_bytes)
+    print("Last week's space remaining " + str(last_week) + "TB")
+    burn_rate_bytes = (last_week_bytes - free_space_bytes)/7
+    burn_rate = burn_rate_bytes / 1024 /1024 /1024
     tautulli_stats = get_tautulli_stats()
     #have to escape . in the below re.escape() is the easiest way
-    telegram_bot_sendtext(re.escape("Free space remaining: " + str(free_space) + "TB\n"+"Current burn rate: {:.3f}TB per day, {:.1f} days of storage remaining\n{}".format(burn_rate,free_space/burn_rate,tautulli_stats)),CHAT_ID)
+    telegram_bot_sendtext(re.escape("Free space remaining: " + str(free_space) + "TB\n"+"Current burn rate: {:.1f}GB per day, {:.1f} days of storage remaining\n{}".format(burn_rate,free_space_bytes/burn_rate_bytes,tautulli_stats)),CHAT_ID)
+    #telegram_bot_sendtext(re.escape("Free space remaining: " + str(free_space) + "TB\n"+"Current burn rate: {:.3f}TB per day, {:.1f} days of storage remaining\n{}".format(burn_rate,free_space/burn_rate,tautulli_stats)),CHAT_ID)
     last_week_file = open('lastweek','w')
-    last_week_file.writelines([str(free_space)])
+    last_week_file.writelines([str(free_space_bytes)])
     last_week_file.close()
 
     # Run the main function
