@@ -5,6 +5,7 @@ import os
 import threading
 import subprocess
 import re
+import sys
 # import credentials from creds.py
 from creds import BOT_TOKEN, CHATBOT_HANDLE, CHAT_ID, TAUTULLI_API_KEY, TAUTULLI_LOCATION
 
@@ -40,8 +41,18 @@ def get_tautulli_stats():
     stats= "Most Popular Movie of last week: " + response['response']['data'][1]['rows'][0]['title'] + " (" + str(response['response']['data'][1]['rows'][0]['users_watched']) + " Users)"
     stats+= "\nMost Popular TV Show of last week: " + response['response']['data'][3]['rows'][0]['title'] + " (" + str(response['response']['data'][3]['rows'][0]['users_watched']) + " Users)"
     if(len(response['response']['data'][9]['rows']) > 0):
-      stats+= "\nMost Popular Artist of last week: " + response['response']['data'][9]['rows'][0]['title'] + " (" + str(response['response']['data'][9]['rows'][0]['total_plays']) + " Plays)"
-
+      #we need to find the most popular audiobook and most popular artist
+      author_found = False
+      artist_found = False
+      i = 0
+      while ((not author_found or not artist_found) and i < len(response['response']['data'][9]['rows'])):
+        if (response['response']['data'][9]['rows'][i]['section_id'] == 9):
+          artist_found = True
+          stats+= "\nMost Popular Artist of last week: " + response['response']['data'][9]['rows'][i]['title'] + " (" + str(response['response']['data'][9]['rows'][i]['total_plays']) + " Plays)"
+        elif (response['response']['data'][9]['rows'][i]['section_id'] == 12):
+          author_found = True
+          stats+= "\nMost Popular Author of last week: " + response['response']['data'][9]['rows'][i]['title'] + " (" + str(response['response']['data'][9]['rows'][i]['total_plays']) + " Plays)"
+        i = i + 1
     #print(stats)
     return stats
 
@@ -76,4 +87,8 @@ def main():
 
     # Run the main function
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        main()
+    elif (sys.argv[1] == "tautulli_only"):
+        tautulli_stats = get_tautulli_stats()
+        print(tautulli_stats)
